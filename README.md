@@ -1,128 +1,128 @@
 # WhatsApp Chat Exporter
 
-![Python](https://img.shields.io/badge/Python-3.7%2B-blue.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/Python-3.7%2B-blue.svg) ![Lizenz: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-A Python script to export the chat history of a specific contact or group from WhatsApp Web using Selenium.
-
----
-
-### ⚠️ Disclaimer & Important Warnings
-
-*   **For Educational & Personal Use Only:** This script is intended for personal use to back up your own chat data. Do not use it for any other purpose.
-*   **Requires Debug Mode:** This script works by remotely controlling your browser. This requires you to start Chrome in a special "remote debugging" mode, which grants the script significant control over your browser session.
-*   **Brittle by Nature:** The script relies on the internal HTML structure of WhatsApp Web. WhatsApp can (and does) update its website frequently, which will likely break this script. Future updates will be required to keep it working.
-*   **Use a Temporary Profile:** The instructions below use a temporary browser profile to avoid interfering with your main browser data and for better security.
+Ein Python-Skript zum Exportieren des Chatverlaufs eines bestimmten Kontakts oder einer Gruppe aus WhatsApp Web mithilfe von Selenium.
 
 ---
 
-### ✨ Features
+### ⚠️ Haftungsausschluss & Wichtige Warnungen
 
-*   Connects to an existing Chrome session.
-*   Searches for a specified contact or group.
-*   Automatically scrolls up to the beginning of the chat to load the entire history.
-*   Extracts all messages and prints them to the console.
-*   Saves a full copy of the chat to `exported_chat.txt`.
+*   **Nur für Bildungs- und persönlichen Gebrauch:** Dieses Skript ist für den persönlichen Gebrauch gedacht, um deine eigenen Chatdaten zu sichern. Verwende es nicht für andere Zwecke.
+*   **Benötigt Debug-Modus:** Dieses Skript funktioniert, indem es deinen Browser fernsteuert. Dies erfordert, dass du Chrome in einem speziellen "Remote Debugging"-Modus startest, der dem Skript erhebliche Kontrolle über deine Browsersitzung gewährt.
+*   **Anfällig für Änderungen:** Das Skript basiert auf der internen HTML-Struktur von WhatsApp Web. WhatsApp kann (und wird) seine Website häufig aktualisieren, was das Skript wahrscheinlich unbrauchbar machen wird. Zukünftige Aktualisierungen sind erforderlich, um die Funktionsfähigkeit zu gewährleisten.
+*   **Verwende ein temporäres Profil:** Die folgenden Anweisungen verwenden ein temporäres Browserprofil, um eine Beeinträchtigung deiner Hauptbrowserdaten zu vermeiden und die Sicherheit zu erhöhen.
 
 ---
 
-### ⚙️ Prerequisites
+### ✨ Funktionen
+
+*   Verbindet sich mit einer bestehenden Chrome-Sitzung.
+*   Sucht nach einem angegebenen Kontakt oder einer Gruppe.
+*   Scrollt automatisch bis zum Anfang des Chats, um den gesamten Verlauf zu laden.
+*   Extrahiert alle Nachrichten und gibt sie auf der Konsole aus.
+*   Speichert eine vollständige Kopie des Chats in `exported_chat.txt`.
+
+---
+
+### ⚙️ Voraussetzungen
 
 *   Python 3.7+
-*   Google Chrome browser
+*   Google Chrome Browser
 
 ---
 
 ### 🚀 Installation
 
-1.  **Clone the repository:**
+1.  **Repository klonen:**
     ```bash
-    git clone <your-repository-url>
+    git clone <deine-repository-url>
     cd chat-reader
     ```
 
-2.  **Create a Python virtual environment:**
+2.  **Virtuelle Python-Umgebung erstellen:**
     ```bash
     python3 -m venv venv
     ```
 
-3.  **Activate the virtual environment:**
-    *   On macOS & Linux:
+3.  **Virtuelle Umgebung aktivieren:**
+    *   Unter macOS & Linux:
         ```bash
         source venv/bin/activate
         ```
-    *   On Windows:
+    *   Unter Windows:
         ```bash
         venv\Scripts\activate
         ```
 
-4.  **Install the required dependencies:**
+4.  **Erforderliche Abhängigkeiten installieren:**
     ```bash
     pip install -r requirements.txt
     ```
 
 ---
 
-###  kullanım
+### 📖 Verwendung
 
-1.  **Edit the Script:**
-    Open the `whatsapp_reader.py` file and change the `CONTACT_NAME` variable to the exact name of the contact or group you want to export.
+1.  **Skript bearbeiten:**
+    Öffne die Datei `whatsapp_reader.py` und ändere die Variable `CONTACT_NAME` auf den genauen Namen des Kontakts oder der Gruppe, den du exportieren möchtest.
 
     ```python
     # whatsapp_reader.py
-    CONTACT_NAME = "John Doe" # <-- Change this
+    CONTACT_NAME = "Max Mustermann" # <-- Hier ändern
     ```
 
-2.  **Close All Chrome Instances:**
-    This is crucial for the next step to work correctly.
+2.  **Alle Chrome-Instanzen schließen:**
+    Dies ist entscheidend, damit der nächste Schritt korrekt funktioniert.
 
-3.  **Start Chrome in Debug Mode:**
-    Open a terminal and run the appropriate command for your operating system. This will open a new, temporary Chrome window.
+3.  **Chrome im Debug-Modus starten:**
+    Öffne ein Terminal und führe den entsprechenden Befehl für dein Betriebssystem aus. Dadurch wird ein neues, temporäres Chrome-Fenster geöffnet.
 
-    *   **On Linux:**
+    *   **Unter Linux:**
         ```bash
         google-chrome --remote-debugging-port=9222 --user-data-dir="/tmp/chrome-dev-session"
         ```
-    *   **On macOS:**
+    *   **Unter macOS:**
         ```bash
         /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="/tmp/chrome-dev-session"
         ```
-    *   **On Windows:**
+    *   **Unter Windows:**
         ```cmd
         "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%TEMP%\chrome-dev-session"
         ```
 
-4.  **Log into WhatsApp Web:**
-    In the new Chrome window that just opened, navigate to `web.whatsapp.com` and log in by scanning the QR code with your phone. Wait for your chats to load completely.
+4.  **Bei WhatsApp Web anmelden:**
+    Navigiere in dem soeben geöffneten Chrome-Fenster zu `web.whatsapp.com` und melde dich an, indem du den QR-Code mit deinem Telefon scannst. Warte, bis deine Chats vollständig geladen sind.
 
-5.  **Run the Script:**
-    Go back to your terminal (where the virtual environment is activated) and run the script:
+5.  **Skript ausführen:**
+    Gehe zurück zu deinem Terminal (wo die virtuelle Umgebung aktiviert ist) und führe das Skript aus:
     ```bash
     python whatsapp_reader.py
     ```
 
-The script will now take over, find the chat, scroll through its history, and print all messages to the console. A file named `exported_chat.txt` will be created with the full chat log.
+Das Skript übernimmt nun, findet den Chat, scrollt durch seinen Verlauf und gibt alle Nachrichten auf der Konsole aus. Eine Datei namens `exported_chat.txt` wird mit dem vollständigen Chat-Log erstellt.
 
 ---
 
-### 🤝 Contributing
+### 🤝 Mitwirken
 
-Contributions are welcome! If you want to improve the script, please follow these steps:
+Beiträge sind willkommen! Wenn du das Skript verbessern möchtest, befolge diese Schritte:
 
-1.  Fork the repository.
-2.  Create a new branch (`git checkout -b feature/your-feature-name`).
-3.  Make your changes.
-4.  Commit your changes (`git commit -m 'Add some feature'`).
-5.  Push to the branch (`git push origin feature/your-feature-name`).
-6.  Open a Pull Request.
+1.  Forke das Repository.
+2.  Erstelle einen neuen Branch (`git checkout -b feature/dein-feature-name`).
+3.  Nimm deine Änderungen vor.
+4.  Commite deine Änderungen (`git commit -m 'Add some feature'`).
+5.  Pushe in den Branch (`git push origin feature/dein-feature-name`).
+6.  Öffne einen Pull Request.
 
-Some ideas for improvement:
-*   Make XPaths more robust.
-*   Add error handling for more edge cases.
-*   Export to different formats (JSON, CSV).
-*   Add a simple GUI.
+Einige Ideen zur Verbesserung:
+*   XPaths robuster machen.
+*   Fehlerbehandlung für mehr Sonderfälle hinzufügen.
+*   Export in verschiedene Formate (JSON, CSV).
+*   Eine einfache Benutzeroberfläche hinzufügen.
 
 ---
 
-### 📄 License
+### 📄 Lizenz
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+Dieses Projekt ist unter der MIT-Lizenz lizenziert. Details findest du in der Datei `LICENSE`.
