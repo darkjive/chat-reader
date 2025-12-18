@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.venv/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+# Temporary Chrome Profile
+/tmp/chrome-dev-session
+
+# OS-specific
+.DS_Store
+Thumbs.db
