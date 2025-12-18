@@ -16,7 +16,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 #  Gib den exakten Namen des Kontakts oder der Gruppe ein, wie er
 #  in deiner WhatsApp-Kontaktliste erscheint.
 #
-CONTACT_NAME = "Name des Kontakts hier eingeben"
+CONTACT_NAME = "Yvonne"
 
 # +--------------------------------------------------------------------+
 # |                      ANLEITUNG ZUR BENUTZUNG                         |
@@ -46,7 +46,7 @@ CONTACT_NAME = "Name des Kontakts hier eingeben"
 def main():
     """Hauptfunktion zum Auslesen des WhatsApp-Chats."""
     
-    if CONTACT_NAME == "Name des Kontakts hier eingeben":
+    if CONTACT_NAME == "Yvonne":
         print("FEHLER: Bitte bearbeite das Skript und gib einen Kontaktnamen in der Variable 'CONTACT_NAME' an.")
         sys.exit(1)
 

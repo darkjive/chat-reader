@@ -72,32 +72,22 @@ Ein Python-Skript zum Exportieren des Chatverlaufs eines bestimmten Kontakts ode
     CONTACT_NAME = "Max Mustermann" # <-- Hier ändern
     ```
 
-2.  **Alle Chrome-Instanzen schließen:**
-    Dies ist entscheidend, damit der nächste Schritt korrekt funktioniert.
+2.  **Chrome im Debug-Modus starten:**
+    Führe das mitgelieferte Hilfsskript aus. Es beendet automatisch alle alten Chrome-Prozesse und startet ein neues, sauberes Browser-Fenster im Debug-Modus.
 
-3.  **Chrome im Debug-Modus starten:**
-    Öffne ein Terminal und führe den entsprechenden Befehl für dein Betriebssystem aus. Dadurch wird ein neues, temporäres Chrome-Fenster geöffnet.
+    ```bash
+    ./start_chrome.sh
+    ```
+    *(Hinweis: Das Skript ist für Linux (`chromium`) ausgelegt. Für macOS oder Windows müssen die Befehle im Skript ggf. angepasst werden.)*
 
-    *   **Unter Linux:**
-        ```bash
-        google-chrome --remote-debugging-port=9222 --user-data-dir="/tmp/chrome-dev-session"
-        ```
-    *   **Unter macOS:**
-        ```bash
-        /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="/tmp/chrome-dev-session"
-        ```
-    *   **Unter Windows:**
-        ```cmd
-        "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%TEMP%\chrome-dev-session"
-        ```
-
-4.  **Bei WhatsApp Web anmelden:**
+3.  **Bei WhatsApp Web anmelden:**
     Navigiere in dem soeben geöffneten Chrome-Fenster zu `web.whatsapp.com` und melde dich an, indem du den QR-Code mit deinem Telefon scannst. Warte, bis deine Chats vollständig geladen sind.
 
-5.  **Skript ausführen:**
-    Gehe zurück zu deinem Terminal (wo die virtuelle Umgebung aktiviert ist) und führe das Skript aus:
+4.  **Exporter-Skript ausführen:**
+    Führe das zweite Hilfsskript aus. Es startet den Python-Code automatisch mit der richtigen virtuellen Umgebung.
+
     ```bash
-    python whatsapp_reader.py
+    ./run_exporter.sh
     ```
 
 Das Skript übernimmt nun, findet den Chat, scrollt durch seinen Verlauf und gibt alle Nachrichten auf der Konsole aus. Eine Datei namens `exported_chat.txt` wird mit dem vollständigen Chat-Log erstellt.
