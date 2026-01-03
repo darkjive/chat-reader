@@ -2,7 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.7%2B-blue.svg) ![Lizenz: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-Ein Python-Skript zum Exportieren des Chatverlaufs eines bestimmten Kontakts oder einer Gruppe aus WhatsApp Web mithilfe von Selenium.
+Ein Python-Skript zum Exportieren des Chatverlaufs eines bestimmten Kontakts oder einer Gruppe aus WhatsApp Web mithilfe von Playwright.
 
 ---
 
@@ -60,37 +60,42 @@ Ein Python-Skript zum Exportieren des Chatverlaufs eines bestimmten Kontakts ode
     pip install -r requirements.txt
     ```
 
+5.  **Playwright Browser installieren:**
+    ```bash
+    playwright install chromium
+    ```
+
 ---
 
 ### 📖 Verwendung
 
-1.  **Skript bearbeiten:**
-    Öffne die Datei `whatsapp_reader.py` und ändere die Variable `CONTACT_NAME` auf den genauen Namen des Kontakts oder der Gruppe, den du exportieren möchtest.
+1.  **Chrome im Debug-Modus starten:**
+    Schließe alle Chrome-Fenster und führe folgenden Befehl aus:
 
-    ```python
-    # whatsapp_reader.py
-    CONTACT_NAME = "Max Mustermann" # <-- Hier ändern
-    ```
-
-2.  **Chrome im Debug-Modus starten:**
-    Führe das mitgelieferte Hilfsskript aus. Es beendet automatisch alle alten Chrome-Prozesse und startet ein neues, sauberes Browser-Fenster im Debug-Modus.
-
+    Linux/macOS:
     ```bash
-    ./start_chrome.sh
+    google-chrome --remote-debugging-port=9222 --user-data-dir="/tmp/chrome-dev-session"
     ```
-    *(Hinweis: Das Skript ist für Linux (`chromium`) ausgelegt. Für macOS oder Windows müssen die Befehle im Skript ggf. angepasst werden.)*
 
-3.  **Bei WhatsApp Web anmelden:**
+    Windows (Command Prompt):
+    ```cmd
+    "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%TEMP%\chrome-dev-session"
+    ```
+
+2.  **Bei WhatsApp Web anmelden:**
     Navigiere in dem soeben geöffneten Chrome-Fenster zu `web.whatsapp.com` und melde dich an, indem du den QR-Code mit deinem Telefon scannst. Warte, bis deine Chats vollständig geladen sind.
 
-4.  **Exporter-Skript ausführen:**
-    Führe das zweite Hilfsskript aus. Es startet den Python-Code automatisch mit der richtigen virtuellen Umgebung.
-
+3.  **Exporter-Skript ausführen:**
     ```bash
-    ./run_exporter.sh
+    ./run_exporter.sh "Kontaktname"
     ```
 
-Das Skript übernimmt nun, findet den Chat, scrollt durch seinen Verlauf und gibt alle Nachrichten auf der Konsole aus. Eine Datei namens `exported_chat.txt` wird mit dem vollständigen Chat-Log erstellt.
+    Oder direkt:
+    ```bash
+    python whatsapp_reader.py "Kontaktname"
+    ```
+
+Das Skript findet den Chat, scrollt durch den Verlauf und exportiert alle Nachrichten in eine Datei im `exports/` Verzeichnis (Format: `Kontaktname_TIMESTAMP.txt`).
 
 ---
 

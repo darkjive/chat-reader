@@ -1,22 +1,17 @@
 # whatsapp_reader.py
 import time
 import sys
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import os
+from datetime import datetime
+from playwright.sync_api import sync_playwright
 
 # +--------------------------------------------------------------------+
 # |                        KONFIGURATION                               |
 # +--------------------------------------------------------------------+
 #
-#  ÄNDERE DEN NAMEN HIER:
-#  Gib den exakten Namen des Kontakts oder der Gruppe ein, wie er
-#  in deiner WhatsApp-Kontaktliste erscheint.
+# Der Kontaktname wird als Kommandozeilenargument übergeben.
+# Beispiel: python whatsapp_reader.py "Max Mustermann"
 #
-CONTACT_NAME = "Yvonne"
 
 # +--------------------------------------------------------------------+
 # |                      ANLEITUNG ZUR BENUTZUNG                         |
@@ -45,116 +40,205 @@ CONTACT_NAME = "Yvonne"
 
 def main():
     """Hauptfunktion zum Auslesen des WhatsApp-Chats."""
-    
-    if CONTACT_NAME == "Yvonne":
-        print("FEHLER: Bitte bearbeite das Skript und gib einen Kontaktnamen in der Variable 'CONTACT_NAME' an.")
+
+    if len(sys.argv) < 2:
+        print("FEHLER: Bitte gib den Kontaktnamen als Argument an.")
+        print("Verwendung: python whatsapp_reader.py \"Kontaktname\"")
         sys.exit(1)
+
+    CONTACT_NAME = sys.argv[1]
 
     print("Verbinde mit der laufenden Chrome-Instanz...")
-    try:
-        chrome_options = Options()
-        chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
-        driver = webdriver.Chrome(options=chrome_options)
-    except Exception as e:
-        print("\nFEHLER BEIM VERBINDEN MIT CHROME:")
-        print("Stelle sicher, dass du die Anleitung oben genau befolgt hast.")
-        print("1. Sind alle anderen Chrome-Fenster geschlossen?")
-        print("2. Hast du Chrome mit dem exakten Befehl aus der Anleitung gestartet?")
-        print(f"(Fehlerdetails: {e})")
-        sys.exit(1)
 
-    print("Erfolgreich mit Chrome verbunden. Stelle sicher, dass web.whatsapp.com geöffnet ist.")
+    with sync_playwright() as p:
+        try:
+            # Verbinde mit dem laufenden Chrome über CDP
+            browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
 
-    try:
-        # --- 1. Kontakt suchen und öffnen ---
-        print(f"Suche nach dem Chat: '{CONTACT_NAME}'...")
+            # Hole den Default-Context (der existierende Browser-Context)
+            contexts = browser.contexts
+            if not contexts:
+                print("\nFEHLER: Keine aktiven Browser-Kontexte gefunden.")
+                print("Stelle sicher, dass Chrome läuft und du bei WhatsApp Web eingeloggt bist.")
+                sys.exit(1)
 
-        # XPath für das Suchfeld in WhatsApp Web (Titel-Attribut ist sprachabhängig)
-        search_box_xpath = "//div[@title='Suchen oder neuen Chat starten']"
-        
-        # Warte, bis die Hauptseite von WhatsApp geladen ist (max. 30 Sekunden)
-        search_box = WebDriverWait(driver, 30).until(
-            EC.element_to_be_clickable((By.XPATH, search_box_xpath))
-        )
-        
-        # Klicke, leere das Feld und gib den Namen ein
-        search_box.click()
-        search_box.clear()
-        search_box.send_keys(CONTACT_NAME)
-        time.sleep(1) # Kurze Pause, damit die Suchergebnisse laden können
+            context = contexts[0]
 
-        # XPath, um den Chat in der Ergebnisliste zu finden
-        chat_xpath = f"//span[contains(@title, '{CONTACT_NAME}')]"
-        chat_element = WebDriverWait(driver, 15).until(
-            EC.element_to_be_clickable((By.XPATH, chat_xpath))
-        )
-        chat_element.click()
-        print(f"Chat mit '{CONTACT_NAME}' geöffnet.")
-        time.sleep(2) # Warte, bis der Chat-Verlauf geladen wird
+            # Suche nach einem offenen WhatsApp Web Tab oder öffne einen neuen
+            pages = context.pages
+            page = None
 
-        # --- 2. Nachrichten auslesen und scrollen ---
-        # XPath für das Panel, das die Nachrichten enthält.
-        # Die Klasse kann sich ändern, dies ist ein Versuch.
-        chat_pane_xpath = "//div[contains(@class, '_aigv')]"
-        chat_pane = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, chat_pane_xpath))
-        )
+            for p_page in pages:
+                if "web.whatsapp.com" in p_page.url:
+                    page = p_page
+                    print("Verwende bestehenden WhatsApp Web Tab.")
+                    break
 
-        print("Beginne mit dem Auslesen des Verlaufs. Das kann je nach Länge dauern...")
-        
-        all_messages = []
-        last_height = 0
-        no_new_messages_count = 0
+            if not page:
+                page = context.new_page()
+                print("Öffne WhatsApp Web...")
+                page.goto("https://web.whatsapp.com")
+                print("Warte auf Login... (bitte QR-Code scannen falls nötig)")
+                # Warte auf das Suchfeld - zeigt an, dass WhatsApp geladen ist
+                page.wait_for_selector('[data-testid="chat-list-search"]', timeout=60000)
 
-        while no_new_messages_count < 3: # Stoppe, wenn 3x Scrollen keine neuen Nachrichten bringt
-            # XPath für einzelne Nachrichten-Container
-            message_elements_xpath = ".//div[contains(@class, 'copyable-text')]"
-            
-            current_messages = chat_pane.find_elements(By.XPATH, message_elements_xpath)
-            
-            new_messages_found = False
-            for msg_el in reversed(current_messages): # Von unten nach oben durchgehen
-                # Metadaten (Zeit, Status) und Nachrichtentext sind getrennt
+            print("Erfolgreich mit Chrome verbunden.")
+
+        except Exception as e:
+            print("\nFEHLER BEIM VERBINDEN MIT CHROME:")
+            print("Stelle sicher, dass du die Anleitung oben genau befolgt hast.")
+            print("1. Sind alle anderen Chrome-Fenster geschlossen?")
+            print("2. Hast du Chrome mit dem exakten Befehl aus der Anleitung gestartet?")
+            print(f"(Fehlerdetails: {e})")
+            sys.exit(1)
+
+        try:
+            # --- 1. Kontakt suchen und öffnen ---
+            print(f"Suche nach dem Chat: '{CONTACT_NAME}'...")
+
+            # Versuche verschiedene Selektoren für das Suchfeld
+            search_box = None
+            selectors = [
+                '[data-testid="chat-list-search"]',
+                'div[contenteditable="true"][data-tab="3"]',
+                'div[title*="Suchen"]',
+                'div[title*="Search"]',
+                'p.selectable-text[contenteditable="true"]'
+            ]
+
+            print("Suche Suchfeld...")
+            for selector in selectors:
                 try:
-                    meta_text = msg_el.get_attribute('data-pre-plain-text') # Enthält [Uhrzeit] Name:
-                    message_text = msg_el.find_element(By.XPATH, ".//span[contains(@class, 'selectable-text')]" ).text
-                    
-                    full_message = f"{meta_text} {message_text}"
-                    
-                    if full_message not in all_messages:
-                        all_messages.insert(0, full_message) # Vorne einfügen, um Reihenfolge beizubehalten
-                        new_messages_found = True
-                except NoSuchElementException:
-                    # Manchmal sind Elemente leer oder haben eine andere Struktur
+                    search_box = page.locator(selector).first
+                    search_box.click(timeout=5000)
+                    print(f"Suchfeld gefunden: {selector}")
+                    break
+                except:
                     continue
 
-            if new_messages_found:
-                print(f"{len(all_messages)} Nachrichten gefunden...")
-                no_new_messages_count = 0
+            if not search_box:
+                print("\nFEHLER: Suchfeld konnte nicht gefunden werden.")
+                print("Stelle sicher, dass WhatsApp Web vollständig geladen ist.")
+                sys.exit(1)
+
+            search_box.fill(CONTACT_NAME)
+            print(f"Suche nach '{CONTACT_NAME}' eingegeben, warte auf Ergebnisse...")
+            time.sleep(2)
+
+            # Finde den Chat in den Suchergebnissen
+            # Playwright wartet automatisch auf das Element
+            try:
+                chat_result = page.locator(f'span[title="{CONTACT_NAME}"]').first
+                chat_result.click(timeout=10000)
+                print(f"Chat mit '{CONTACT_NAME}' geöffnet.")
+            except Exception:
+                print(f"\nFEHLER: Chat '{CONTACT_NAME}' konnte nicht gefunden werden.")
+                print("Verfügbare Chats im Suchfeld:")
+                try:
+                    # Zeige verfügbare Chat-Titel
+                    titles = page.locator('[data-testid="cell-frame-title"]').all_text_contents()
+                    for title in titles[:10]:
+                        print(f"  - {title}")
+                except:
+                    print("  (Konnte keine Chat-Titel auslesen)")
+                sys.exit(1)
+
+            time.sleep(2)  # Warte, bis der Chat-Verlauf geladen wird
+
+            # --- 2. Nachrichten auslesen und scrollen ---
+            print("Beginne mit dem Auslesen des Verlaufs. Das kann je nach Länge dauern...")
+
+            all_messages = []
+            no_new_messages_count = 0
+            last_message_count = 0
+
+            while no_new_messages_count < 3:
+                # Finde alle Nachrichten-Elemente
+                # Versuche verschiedene Selektoren
+                message_elements = []
+                msg_selectors = [
+                    '[data-testid="msg-container"]',
+                    'div.message-in, div.message-out',
+                    'div[class*="message"]'
+                ]
+
+                for selector in msg_selectors:
+                    try:
+                        message_elements = page.locator(selector).all()
+                        if message_elements:
+                            if last_message_count == 0:  # Nur beim ersten Mal
+                                print(f"Nachrichten gefunden mit: {selector}")
+                            break
+                    except:
+                        continue
+
+                current_count = len(message_elements)
+                if current_count > last_message_count:
+                    print(f"{current_count} Nachrichten im sichtbaren Bereich...")
+                    last_message_count = current_count
+
+                new_messages_found = False
+
+                # Extrahiere Nachrichten von oben nach unten
+                for msg_el in message_elements:
+                    try:
+                        # Hole den kompletten Text der Nachricht
+                        message_text = msg_el.inner_text()
+
+                        if message_text and message_text not in all_messages:
+                            all_messages.append(message_text)
+                            new_messages_found = True
+                    except Exception:
+                        continue
+
+                if new_messages_found:
+                    no_new_messages_count = 0
+                else:
+                    no_new_messages_count += 1
+                    print("Keine neuen Nachrichten gefunden, scrolle weiter nach oben...")
+
+                # Nach oben scrollen um ältere Nachrichten zu laden
+                # Fokussiere den Chat und scrolle mit Keyboard
+                page.keyboard.press("PageUp")
+                page.keyboard.press("PageUp")
+                time.sleep(2)
+
+                # Alternative: Scrolle mit JavaScript am ganzen Window
+                page.evaluate("window.scrollTo(0, 0)")
+                time.sleep(2)
+
+            print(f"\nGesamt: {len(all_messages)} Nachrichten gefunden.")
+
+            print("\n--- VOLLSTÄNDIGER CHAT-VERLAUF ---")
+            for msg in all_messages:
+                print(msg)
+                print("-" * 40)
+
+            # Exportiere in Datei
+            if all_messages:
+                os.makedirs("exports", exist_ok=True)
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"exports/{CONTACT_NAME}_{timestamp}.txt"
+
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(f"WhatsApp Chat Export: {CONTACT_NAME}\n")
+                    f.write(f"Exportiert am: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    f.write(f"Anzahl Nachrichten: {len(all_messages)}\n")
+                    f.write("=" * 80 + "\n\n")
+                    for msg in all_messages:
+                        f.write(msg + "\n")
+                        f.write("-" * 40 + "\n")
+
+                print(f"\nChat wurde exportiert nach: {filename}")
             else:
-                print("Keine *neuen* Nachrichten im sichtbaren Bereich gefunden.")
-                no_new_messages_count += 1
+                print("\nKeine Nachrichten gefunden - kein Export erstellt.")
 
-            # Nach oben scrollen
-            driver.execute_script("arguments[0].scrollTop = 0", chat_pane)
-            print("Scrolle nach oben...")
-            time.sleep(4) # WICHTIG: Wartezeit, damit alte Nachrichten nachgeladen werden können.
-                          # Bei langsamer Verbindung ggf. erhöhen.
-
-        print("\n--- VOLLSTÄNDIGER CHAT-VERLAUF ---")
-        for msg in all_messages:
-            print(msg)
-
-    except TimeoutException:
-        print("\nFEHLER: Ein Element wurde nicht rechtzeitig gefunden.")
-        print(f"Mögliche Gründe:")
-        print(f"1. Der Kontakt '{CONTACT_NAME}' wurde nicht in der Chat-Liste gefunden.")
-        print("2. Die Internetverbindung ist zu langsam.")
-        print("3. WhatsApp hat sein Design geändert und die XPaths im Skript sind veraltet.")
-    except Exception as e:
-        print(f"\nEin unerwarteter Fehler ist aufgetreten: {e}")
-    finally:
-        print("\nSkript beendet.")
+        except Exception as e:
+            print(f"\nEin Fehler ist aufgetreten: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            print("\nSkript beendet.")
 
 
 if __name__ == "__main__":

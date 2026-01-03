@@ -20,7 +20,8 @@ echo "Starte den WhatsApp Exporter mit dem Python-Interpreter aus 'venv'..."
 echo "---"
 
 # Führe das Skript direkt mit dem Python aus dem venv aus
-./venv/bin/python whatsapp_reader.py
+# Alle Argumente werden durchgereicht
+./venv/bin/python whatsapp_reader.py "$@"
 
 echo "---"
 echo "Exporter-Skript beendet."
